@@ -1,13 +1,17 @@
 from enum import Enum
+import json
 import sys
+from time import sleep
 from typing import Literal
-from anthropic import Anthropic
+from anthropic import Anthropic, RateLimitError
 from dotenv import load_dotenv
 from openai import OpenAI
 from function_schema import get_function_schema
 from tools import tools, get_route, choose_song_from_playlist, publish_tweet, send_message_to_contact, create_new_playlist
 import os
+import logging
 
+logging.basicConfig(level=logging.WARN)
 
 load_dotenv()
 
@@ -18,11 +22,14 @@ client = OpenAI(
     api_key=os.getenv("OPENAI_API_KEY")
 )
 
+model = os.getenv("DEFAULT_MODEL")
+
 
 class AIGateway:
     def __init__(self, provider: Literal['claude', 'openai'] = 'claude', system_prompt: list[dict] | str = ""):
         self.provider = provider
         self.messages = []
+        self.selected_model = model
         self.system_prompt = system_prompt
         self.tools = self._generate_tools_schema(tools)
         if provider == 'claude':
@@ -33,17 +40,38 @@ class AIGateway:
             raise ValueError("Unsupported AI provider")
 
     def get_client(self):
+        if self.provider == "claude":
+            if self.selected_model == "claude-3-5-sonnet-20240620":
+                return self.client.beta.prompt_caching
         return self.client
 
     def complete(self, prompt="", system_prompt: str | list[str] = "", **kwargs):
         if self.provider == 'claude':
-            response = self.client.beta.prompt_caching.messages.create(
-                model="claude-3-5-sonnet-20240620",
-                messages=self.messages,
-                system=self.system_prompt,  # type: ignore
-                **kwargs
-            )
-            return response
+            try:
+                response = self.get_client().messages.create(
+                    model=self.selected_model,
+                    messages=self.messages,
+                    system=self.system_prompt,  # type: ignore
+                    **kwargs
+                )
+                return response
+            except RateLimitError as e:
+                if self.selected_model == "claude-3-5-sonnet-20240620":
+                    logging.error(e)
+                    logging.warning(
+                        "You have hit your rate limit, switching to Haiku....")
+                    self.selected_model = "claude-3-haiku-20240307"
+                logging.info("Please wait...")
+                sleep(5)
+                logging.info("Back online")
+                response = self.get_client().messages.create(
+                    model=self.selected_model,
+                    messages=self.messages,
+                    system=self.system_prompt,  # type: ignore
+                    **kwargs
+                )
+                return response
+
         else:
             raise ValueError("Unsupported AI provider")
 
@@ -66,8 +94,8 @@ class AIGateway:
                 tool_input = tool_use.input
                 tool_name = tool_use.name
                 result = globals()[tool_name](**tool_input)  # type: ignore
-                print("Tool Used: " + tool_name)
-                print("========")
+                logging.info("==============TOOL RESULT===========")
+                logging.info(json.dumps(result, indent=2))
                 self.messages.append({
                     "role": "user",
                     "content": [{

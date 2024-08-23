@@ -91,13 +91,12 @@ client = AIGateway(
         {
             "type": "text",
             "text": system_prompt,
-            "cache_control": {"type": "ephemeral"}
         }],
-
 )
 print(
     f"===========TODAY IS {calendar.day_name[now.weekday()]} the {day}th of {calendar.month_name[now.month]}==========\n"
-    )
+)
+
 
 def send_prompt_to_model(prompt_dict: list[dict] | str):
     try:
@@ -121,27 +120,29 @@ def send_prompt_to_model(prompt_dict: list[dict] | str):
     except Exception as e:
         # print(messages)
         raise e
+
+
 def take_action_at_given_time(time: str):
     print(f"=============The time is {time}============")
     send_prompt_to_model([{
-                    "type": "text",
-                    "text": f"Current time: <time>{time}</time>"
-                }])
+        "type": "text",
+        "text": f"Current time: <time>{time}</time>"
+    }])
+
 
 def get_users_question():
     user_input = input("Do you have a questions? (Press Enter to skip): ")
     while user_input:
-        
+
         send_prompt_to_model([
-                    {
-                        "type": "text",
+            {
+                "type": "text",
                         "text": user_input
-                    }
-                ])
+            }
+        ])
         user_input = input("Do you have a questions? (Press Enter to skip): ")
 
 
 for time in times:
     take_action_at_given_time(time)
     get_users_question()
-            
