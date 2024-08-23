@@ -34,6 +34,8 @@ The program functions as a proactive and independent personal assistant for a us
 
 3. It is simulating a day in the life so only runs for 15 turns in total (but you can interrupt it at any point)
 
+4. Any updates to existing data will be reflected in the `./data` folder.
+
 
 My approach is a combination of Tool calling and Chain of Thought.
 
