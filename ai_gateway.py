@@ -94,8 +94,10 @@ class AIGateway:
                 tool_input = tool_use.input
                 tool_name = tool_use.name
                 result = globals()[tool_name](**tool_input)  # type: ignore
-                logging.info("==============TOOL RESULT===========")
-                logging.info(json.dumps(result, indent=2))
+                print("=============<INTERNAL>===============\n")
+                print("==============TOOL RESULT===========")
+                print(json.dumps(result, indent=2))
+                print("=============</INTERNAL>===============\n")
                 self.messages.append({
                     "role": "user",
                     "content": [{
