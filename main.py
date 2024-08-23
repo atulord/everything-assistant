@@ -91,7 +91,7 @@ client = AIGateway(
         {
             "type": "text",
             "text": system_prompt,
-            # "cache_control": {"type": "ephemeral"}
+            "cache_control": {"type": "ephemeral"}
         }],
 
 )

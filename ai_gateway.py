@@ -37,8 +37,8 @@ class AIGateway:
 
     def complete(self, prompt="", system_prompt: str | list[str] = "", **kwargs):
         if self.provider == 'claude':
-            response = self.client.messages.create(
-                model="claude-3-haiku-20240307",
+            response = self.client.beta.prompt_caching.messages.create(
+                model="claude-3-5-sonnet-20240620",
                 messages=self.messages,
                 system=self.system_prompt,  # type: ignore
                 **kwargs
