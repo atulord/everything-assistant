@@ -1,9 +1,9 @@
 from datetime import datetime
-from ai_gateway import anthropic_client, AIGateway
+from ai_gateway import AIGateway
 from user_data import location_data, calendar_data, user_profile, spotify, social_media
-import os
-import json
 from tools import get_route, choose_song_from_playlist
+import calendar
+
 
 year = 2024
 month = 4
@@ -95,19 +95,16 @@ client = AIGateway(
         }],
 
 )
+print(
+    f"===========TODAY IS {calendar.day_name[now.weekday()]} the {day}th of {calendar.month_name[now.month]}==========\n"
+    )
 
-for time in times:
+def send_prompt_to_model(prompt_dict: list[dict] | str):
     try:
-        datetime_str = f"{year}-{month:02d}-{day:02d} {time}"
         client.messages.append(
             {
                 "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": f"Current time: <time>{time}</time>"
-                    }
-                ]
+                "content": prompt_dict
             }
         )
         response = client.create_message_with_tools(
@@ -124,3 +121,27 @@ for time in times:
     except Exception as e:
         # print(messages)
         raise e
+def take_action_at_given_time(time: str):
+    print(f"=============The time is {time}============")
+    send_prompt_to_model([{
+                    "type": "text",
+                    "text": f"Current time: <time>{time}</time>"
+                }])
+
+def get_users_question():
+    user_input = input("Do you have a questions? (Press Enter to skip): ")
+    while user_input:
+        
+        send_prompt_to_model([
+                    {
+                        "type": "text",
+                        "text": user_input
+                    }
+                ])
+        user_input = input("Do you have a questions? (Press Enter to skip): ")
+
+
+for time in times:
+    take_action_at_given_time(time)
+    get_users_question()
+            
