@@ -1,14 +1,10 @@
-import json
 from typing import Annotated
 from dotenv import load_dotenv
 import requests
 from requests.structures import CaseInsensitiveDict
 from user_data import spotify
-import googlemaps
 import os
-import datetime
 from user_data import spotify, social_media
-from function_schema import get_function_schema
 
 from utils import save_json
 
@@ -50,13 +46,18 @@ def create_new_playlist(playlist_name: Annotated[str, "Name of the playlist to c
 
 
 def get_address_from_geoapify(lat_long: list[float]) -> str | None:
-    url = f"https://api.geoapify.com/v1/geocode/reverse?lat={lat_long[0]}&lon={lat_long[1]}&apiKey={geocoding_api_key}"
+    try:
 
-    headers = CaseInsensitiveDict()
-    headers["Accept"] = "application/json"
+        url = f"https://api.geoapify.com/v1/geocode/reverse?lat={lat_long[0]}&lon={lat_long[1]}&apiKey={geocoding_api_key}"
 
-    resp = requests.get(url, headers=headers)
-    return resp.json()["features"][0]["properties"]["formatted"]
+        headers = CaseInsensitiveDict()
+        headers["Accept"] = "application/json"
+
+        resp = requests.get(url, headers=headers)
+        return resp.json()["features"][0]["properties"]["formatted"]
+    except Exception as e:
+        print("We had an issue fetching your location.")
+        return f"latitude {lat_long[0]} longitude {lat_long[1]}"
 
 
 def get_route(start: Annotated[list, "Starting location for the route. Contains the latitude and longitude"], end: Annotated[list, "Ending location for the route. Contains the latitude and longitude"]) -> dict:
