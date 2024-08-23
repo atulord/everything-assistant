@@ -17,6 +17,7 @@ def publish_tweet(tweet: Annotated[str, "content of tweet"]) -> dict:
     Creates a tweet based on the users interests and personality. Should have a similar tone and content to the user's existing tweets.
     """
     social_media["twitter"]["recent_posts"].append(tweet)
+    save_json(social_media, "./data/social_media.json")
     return {"tweet": tweet}
 
 
